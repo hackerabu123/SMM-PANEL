@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HACKER ABHI - PRO SMM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poetsen+One&family=Inter:wght@400;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f3e8ff; min-height: 100vh; font-family: 'Inter', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .brand-container { width: 100%; max-width: 450px; text-align: left; margin-bottom: 25px; }
+        .main-title { font-family: 'Poetsen One', sans-serif; font-size: 2.8rem; line-height: 1.1; text-transform: uppercase; }
+        .color-hacker { color: #22c55e; } .color-abhi { color: #9333ea; }
+        .main-card { width: 100%; max-width: 450px; background: rgba(255, 255, 255, 0.95); border-radius: 28px; padding: 25px; box-shadow: 0 15px 35px rgba(147, 51, 234, 0.1); border: 1px solid #e9d5ff; }
+        .custom-input { width: 100%; padding: 15px; background: #fdfaff; border: 1px solid #e9d5ff; border-radius: 16px; outline: none; font-weight: 700; color: #6b21a8; margin-bottom: 12px; }
+        
+        /* QR FIX - NO OVERFLOW, DIRECT VIEW */
+        #qr-display-area { width: 220px; height: 220px; margin: 15px auto; background: #fff; border: 5px solid #9333ea; border-radius: 20px; padding: 5px; display: flex; align-items: center; justify-content: center; }
+        #qr-display-area img { width: 100%; height: 100%; object-fit: contain; }
+
+        .btn-primary { width: 100%; padding: 16px; background: #9333ea; color: white; border-radius: 16px; font-weight: 900; text-transform: uppercase; }
+        .support-system { width: 100%; max-width: 450px; background: #9333ea; border-radius: 28px; padding: 25px; margin-top: 35px; text-align: center; color: white; }
+        .support-btn { background: white; color: #6b21a8; width: 100%; padding: 14px; border-radius: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px; }
+        
+        .float-tg { position: fixed; bottom: 25px; left: 25px; background: #0088cc; color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .float-wa { position: fixed; bottom: 25px; right: 25px; background: #25d366; color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+
+    <div class="brand-container">
+        <h1 class="main-title"><span class="color-hacker">HACKER</span> <span class="color-abhi">ABHI</span></h1>
+        <span class="font-black text-[10px] text-purple-600 tracking-[5px] uppercase">Pro SMM Panel</span>
+    </div>
+
+    <div class="main-card">
+        <div id="step1">
+            <div class="flex justify-between items-center px-1 mb-4">
+                <span class="text-[9px] font-black text-purple-400 uppercase tracking-widest">New Order</span>
+                <button onclick="showHistory()" class="text-[9px] font-black text-gray-400 uppercase border-b">History</button>
+            </div>
+            <select id="catSelect" class="custom-input" onchange="loadServices()">
+                <option value="">Choose Platform</option>
+                <option value="insta">Instagram</option>
+                <option value="fb">Facebook</option>
+                <option value="yt">YouTube</option>
+                <option value="tg">Telegram</option>
+            </select>
+            <select id="servSelect" class="custom-input" onchange="document.getElementById('fields').classList.remove('hidden')">
+                <option value="">Select Service</option>
+            </select>
+            <div id="fields" class="hidden space-y-3">
+                <input type="text" id="link" class="custom-input" placeholder="Paste Link">
+                <input type="number" id="qty" class="custom-input" placeholder="Quantity" oninput="calcPrice()">
+                <input type="text" id="totalPrice" class="custom-input bg-purple-50" readonly value="₹ 0.00">
+                <button onclick="goToPay()" class="btn-primary mt-2">Go to Payment</button>
+            </div>
+        </div>
+
+        <div id="step2" class="hidden text-center">
+            <div id="qr-display-area">
+                <img id="mainQR" src="" alt="Payment QR">
+            </div>
+            <p class="text-[10px] font-black text-purple-600 uppercase mb-4">Scan QR to Pay</p>
+            
+            <input type="text" id="utr" class="custom-input" placeholder="Enter UTR ID">
+            <div class="relative">
+                <input type="text" id="payAmountBox" class="custom-input bg-purple-100 border-purple-300" readonly>
+            </div>
+            <button onclick="confirmOrder()" class="w-full py-4 bg-green-500 text-white rounded-xl font-black uppercase mt-2">Submit Order</button>
+            <button onclick="goBack()" class="w-full text-[9px] text-gray-400 font-black uppercase mt-4">Cancel</button>
+        </div>
+
+        <div id="step3" class="hidden">
+            <div id="historyList" class="max-h-[400px] overflow-y-auto pr-1"></div>
+            <button onclick="goBack()" class="w-full text-[9px] font-black text-gray-400 mt-4 uppercase border-t pt-3">Back</button>
+        </div>
+    </div>
+
+    <div class="support-system">
+        <h2 class="font-black text-xl uppercase leading-tight mb-2 text-white">Official Channels</h2>
+        <a href="https://whatsapp.com/channel/0029VbCjFK73rZZfRSRbPg1o" class="support-btn" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp Channel</a>
+        <a href="https://t.me/+sGhtLg9yei01ZmNl" class="support-btn" target="_blank"><i class="fab fa-telegram-plane"></i> Telegram Group</a>
+    </div>
+
+    <a href="https://t.me/madarabhai98" class="float-tg" target="_blank"><i class="fab fa-telegram-plane"></i></a>
+    <a href="https://wa.me/918082918028" class="float-wa" target="_blank"><i class="fab fa-whatsapp"></i></a>
+
+    <script>
+        let config = JSON.parse(localStorage.getItem('smm_rates')) || {
+            insta: { "Likes": 20, "Followers": 85, "Comments": 150, "Views": 10 },
+            fb: { "Post Likes": 35, "Followers": 110 },
+            yt: { "Subscribers": 350, "WatchTime": 600, "Views": 45 },
+            tg: { "Members": 65, "Views": 5 }
+        };
+        let orders = JSON.parse(localStorage.getItem('smm_orders')) || [];
+
+        // QR URL with automatic refresh
+        const qrUrl = "https://firebasestorage.googleapis.com/v0/b/i-to-u.appspot.com/o/publicimage%2F1000536963.jpg?alt=media&token=b381925c-82ed-4c44-acf2-3dd683ca0338";
+
+        function loadServices() {
+            const cat = document.getElementById('catSelect').value;
+            const s = document.getElementById('servSelect');
+            s.innerHTML = '<option value="">Select Service</option>';
+            if(cat && config[cat]) {
+                for(let key in config[cat]) s.add(new Option(key, key));
+            }
+        }
+
+        function calcPrice() {
+            const cat = document.getElementById('catSelect').value;
+            const s = document.getElementById('servSelect').value;
+            const q = document.getElementById('qty').value || 0;
+            if(cat && s && config[cat][s]) {
+                const total = (q / 1000) * config[cat][s];
+                const val = `₹ ${total.toFixed(2)}`;
+                document.getElementById('totalPrice').value = val;
+                document.getElementById('payAmountBox').value = val;
+            }
+        }
+
+        function goToPay() {
+            if(!document.getElementById('link').value || !document.getElementById('qty').value) return alert("Fill all details!");
+            
+            // Force Image Refresh on Click
+            const img = document.getElementById('mainQR');
+            img.src = qrUrl + "&cb=" + new Date().getTime();
+            
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+        }
+
+        function goBack() {
+            document.getElementById('step1').classList.remove('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+        }
+
+        function confirmOrder() {
+            if(!document.getElementById('utr').value) return alert("Enter UTR!");
+            const newOrder = {
+                id: Math.floor(100000 + Math.random()*900000),
+                service: document.getElementById('servSelect').value,
+                link: document.getElementById('link').value,
+                qty: document.getElementById('qty').value,
+                amount: document.getElementById('totalPrice').value,
+                status: 'Pending',
+                date: new Date().toLocaleDateString()
+            };
+            orders.push(newOrder);
+            localStorage.setItem('smm_orders', JSON.stringify(orders));
+            showHistory();
+        }
+
+        function showHistory() {
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+            const list = document.getElementById('historyList');
+            list.innerHTML = orders.length ? '' : '<p class="text-center text-gray-400 py-10 font-black uppercase text-[10px]">No History</p>';
+            
+            orders.slice().reverse().forEach((o, i) => {
+                list.innerHTML += `
+                <div class="history-item" style="background:#fff; border:1px solid #e9d5ff; border-radius:15px; padding:10px; margin-bottom:10px;">
+                    <div class="flex justify-between text-[8px] font-black uppercase"><span class="text-gray-400">#${o.id}</span><span class="text-orange-500">${o.status}</span></div>
+                    <div class="text-[11px] font-black">${o.service}</div>
+                    <div class="flex justify-between mt-2"><span class="text-[9px] font-bold">Qty: ${o.qty}</span><span class="text-[9px] font-bold text-purple-700">${o.amount}</span></div>
+                </div>`;
+            });
+        }
+    </script>
+</body>
+</html>
