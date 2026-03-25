@@ -7,6 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Poetsen+One&family=Inter:wght@400;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+
     <style>
         body { background: #f3e8ff; min-height: 100vh; font-family: 'Inter', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .brand-container { width: 100%; max-width: 450px; text-align: left; margin-bottom: 25px; }
@@ -29,7 +33,7 @@
 <body>
 
     <div class="brand-container">
-        <h1 class="main-title"><span class="color-hacker">HACKER</span> <span class="color-abhi">ABHI</span></h1>
+        <h1 class="main-title"><span class="color-hacker">HACKER</span> <span class="color-abhi">ABU</span></h1>
         <span class="font-black text-[10px] text-purple-600 tracking-[5px] uppercase">Pro SMM Panel</span>
     </div>
 
@@ -88,16 +92,27 @@
     <a href="https://wa.me/918082918028" class="float-wa" target="_blank"><i class="fab fa-whatsapp"></i></a>
 
     <script>
-        // ADMIN SYNC: Rates Admin se fetch honge
-        let config = JSON.parse(localStorage.getItem('smm_rates')) || {
+        // SDK CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTTVVmV2J4A8QqG9gaTFjhTzDW6RqgNps",
+            authDomain: "madara-62f7b.firebaseapp.com",
+            databaseURL: "https://madara-62f7b-default-rtdb.firebaseio.com",
+            projectId: "madara-62f7b",
+            storageBucket: "madara-62f7b.firebasestorage.app",
+            messagingSenderId: "282972851212",
+            appId: "1:282972851212:web:64980ccdfa06b317357229"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let config = {
             insta: { "Likes": 20, "Followers": 85, "Views": 10 },
             fb: { "Post Likes": 35, "Followers": 110 },
             yt: { "Subscribers": 350, "Views": 45 },
             tg: { "Members": 65, "Views": 5 }
         };
 
-        // Shared Database Sync
-        let orders = JSON.parse(localStorage.getItem('smm_orders')) || [];
+        db.ref('rates').on('value', snap => { if(snap.val()) config = snap.val(); });
 
         function loadServices() {
             const cat = document.getElementById('catSelect').value;
@@ -106,13 +121,13 @@
             if(cat && config[cat]) {
                 for(let key in config[cat]) s.add(new Option(key, key));
             }
+            document.getElementById('fields').classList.add('hidden');
         }
 
         function calcPrice() {
             const cat = document.getElementById('catSelect').value;
             const s = document.getElementById('servSelect').value;
             const q = document.getElementById('qty').value || 0;
-            // Admin ke set kiye hue rate se calculate hoga
             if(cat && s && config[cat][s]) {
                 const total = (q / 1000) * config[cat][s];
                 const val = `₹ ${total.toFixed(2)}`;
@@ -134,20 +149,28 @@
         }
 
         function confirmOrder() {
-            if(!document.getElementById('utr').value) return alert("UTR ID zaroori hai!");
+            const utrVal = document.getElementById('utr').value;
+            if(!utrVal) return alert("UTR ID zaroori hai!");
+            
             const newOrder = {
                 id: Math.floor(100000 + Math.random()*900000),
                 service: document.getElementById('servSelect').value,
                 link: document.getElementById('link').value,
                 qty: document.getElementById('qty').value,
                 amount: document.getElementById('totalPrice').value,
+                utr: utrVal,
                 status: 'Pending',
-                date: new Date().toLocaleDateString()
+                date: new Date().toLocaleString()
             };
-            orders.push(newOrder);
-            localStorage.setItem('smm_orders', JSON.stringify(orders)); // Admin ke liye save hua
-            alert("Order Submitted! Admin check karega.");
-            showHistory();
+
+            db.ref('orders').push(newOrder, (error) => {
+                if (error) {
+                    alert("Data save nahi hua! Firebase Rules check karo.");
+                } else {
+                    alert("Order Submitted! Admin check karega.");
+                    showHistory();
+                }
+            });
         }
 
         function showHistory() {
@@ -155,48 +178,36 @@
             document.getElementById('step2').classList.add('hidden');
             document.getElementById('step3').classList.remove('hidden');
             const list = document.getElementById('historyList');
-            // Refresh orders from storage for real-time update
-            orders = JSON.parse(localStorage.getItem('smm_orders')) || [];
-            list.innerHTML = orders.length ? '' : '<p class="text-center py-10 text-gray-400 font-black text-[10px]">No History</p>';
-            
-            orders.slice().reverse().forEach((o, index) => {
-                const actualIndex = orders.length - 1 - index;
-                list.innerHTML += `
-                <div style="background:#fff; border:1px solid #e9d5ff; border-radius:15px; padding:12px; margin-bottom:12px;">
-                    <div class="flex justify-between text-[8px] font-black uppercase mb-1">
-                        <span class="text-gray-400">ID: #${o.id}</span>
-                        <span class="${o.status === 'Completed' ? 'text-green-500' : 'text-orange-500'}">${o.status}</span>
-                    </div>
-                    <div class="text-[11px] font-black text-purple-900">${o.service}</div>
-                    <div class="text-[9px] text-blue-500 underline break-all font-medium my-1">
-                        <i class="fas fa-link"></i> ${o.link}
-                    </div>
-                    <div class="flex justify-between mt-2 items-center">
-                        <span class="text-[9px] font-bold text-gray-500">QTY: ${o.qty}</span>
-                        <div class="flex items-center gap-3">
-                            <span class="text-[10px] font-black text-purple-700">${o.amount}</span>
-                            <button onclick="deleteOrder(${actualIndex})" class="text-red-400"><i class="fas fa-trash-alt"></i></button>
+            list.innerHTML = '<p class="text-center py-10 text-gray-400 font-black text-[10px]">Loading...</p>';
+
+            db.ref('orders').on('value', snap => {
+                const data = snap.val();
+                list.innerHTML = "";
+                if(!data) return list.innerHTML = '<p class="text-center py-10 text-gray-400 font-black text-[10px]">No History</p>';
+                Object.keys(data).reverse().forEach(key => {
+                    const o = data[key];
+                    list.innerHTML += `
+                    <div style="background:#fff; border:1px solid #e9d5ff; border-radius:15px; padding:12px; margin-bottom:12px;">
+                        <div class="flex justify-between text-[8px] font-black uppercase mb-1">
+                            <span class="text-gray-400">ID: #${o.id}</span>
+                            <span class="${o.status === 'Completed' ? 'text-green-500' : 'text-orange-500'}">${o.status}</span>
                         </div>
-                    </div>
-                </div>`;
+                        <div class="text-[11px] font-black text-purple-900">${o.service}</div>
+                        <div class="text-[9px] text-blue-500 underline break-all font-medium my-1">${o.link}</div>
+                        <div class="flex justify-between mt-2 items-center">
+                            <span class="text-[9px] font-bold text-gray-500">QTY: ${o.qty}</span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-black text-purple-700">${o.amount}</span>
+                                <button onclick="deleteOrder('${key}')" class="text-red-400"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
             });
         }
 
-        function deleteOrder(index) {
-            if(confirm("Order delete kar doon?")) {
-                orders.splice(index, 1);
-                localStorage.setItem('smm_orders', JSON.stringify(orders));
-                showHistory();
-            }
-        }
-
-        function clearAllHistory() {
-            if(confirm("Sari history saaf kar doon?")) {
-                orders = [];
-                localStorage.setItem('smm_orders', JSON.stringify(orders));
-                showHistory();
-            }
-        }
+        function deleteOrder(key) { if(confirm("Delete?")) db.ref('orders/' + key).remove(); }
+        function clearAllHistory() { if(confirm("Sari history saaf?")) db.ref('orders').remove(); }
     </script>
 </body>
 </html>
